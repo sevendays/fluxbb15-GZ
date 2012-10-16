@@ -1057,7 +1057,7 @@ function pun_hash($str)
 function phpass_hash($password)
 {
 	if (strlen($password) > 72) { die("Password is longer than 72 characters"); }
-	if(!class_exists(PasswordHash))
+	if(!class_exists("PasswordHash"))
 		require "PasswordHash.php";
 	$hasher = new PasswordHash(8, false);
 	$hash = $hasher->HashPassword($password);
@@ -1075,7 +1075,7 @@ function phpass_hash($password)
 function phpass_check($password, $storedHash)
 {
 	if (strlen($password) > 72) return false;
-	if(!class_exists(PasswordHash))
+	if(!class_exists("PasswordHash"))
 		require "PasswordHash.php";
 	$hasher = new PasswordHash(8, false);
 	$check = $hasher->CheckPassword($password, $storedHash);

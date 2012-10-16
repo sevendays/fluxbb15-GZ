@@ -55,7 +55,7 @@ if (isset($_POST['form_sent']) && $action == 'in')
 	$db->query('DELETE FROM '.$db->prefix.'online WHERE ident=\''.$db->escape(get_remote_address()).'\'') or error('Unable to delete from online list', __FILE__, __LINE__, $db->error());
 
 	$expire = ($save_pass == '1') ? time() + 1209600 : time() + $pun_config['o_timeout_visit'];
-	pun_setcookie($cur_user['id'], $form_password_hash, $expire);
+	pun_setcookie($cur_user['id'], $cur_user['password'], $expire);
 
 	// Reset tracked topics
 	set_tracked_topics(null);

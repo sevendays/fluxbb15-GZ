@@ -1075,6 +1075,7 @@ function phpass_check($password, $storedHash)
 {
 	if (strlen($password) > 72) return false;
 	require_once("PasswordHash.php");
+	$hasher = new PasswordHash(8, false);
 	$check = $hasher->CheckPassword($password, $stored_hash);
 	unset($hasher);
 	return $check;

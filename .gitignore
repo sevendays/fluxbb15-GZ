@@ -12,3 +12,4 @@
 /img/avatars/*.jpg
 /img/avatars/*.gif
 /config.php
+*.*~

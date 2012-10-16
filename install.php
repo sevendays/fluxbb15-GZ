@@ -1359,7 +1359,7 @@ else
 				'default'		=> '\'\''
 			),
 			'password'			=> array(
-				'datatype'		=> 'VARCHAR(40)',
+				'datatype'		=> 'VARCHAR(60)',
 				'allow_null'	=> false,
 				'default'		=> '\'\''
 			),

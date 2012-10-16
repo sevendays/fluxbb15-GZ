@@ -162,7 +162,7 @@ function authenticate_user($user, $password, $password_is_hash = false)
 
 	if (!isset($pun_user['id']) ||
 		($password_is_hash && $password != $pun_user['password']) ||
-		(!$password_is_hash && pun_hash($password) != $pun_user['password']))
+		(!$password_is_hash && !phpass_check($password, $pun_user['password'])))
 		set_default_user();
 	else
 		$pun_user['is_guest'] = false;
@@ -1048,6 +1048,36 @@ function random_pass($len)
 function pun_hash($str)
 {
 	return sha1($str);
+}
+
+
+//
+// Compute PHPass password hashes. pun_hash() is used for many other things.
+//
+function phpass_hash($password)
+{
+	if (strlen($password) > 72) { die("Password is longer than 72 characters"); }
+	require_once("PasswordHash.php");
+	$hasher = new PasswordHash(8, false);
+	$hash = $hasher->HashPassword($password);
+	if (strlen($hash) < 20) { die("Password hashing failed"); }
+	unset($hasher);
+	return $hash;
+}
+
+
+//
+// Check passwords against PHPass stored hashes
+// returns true if the password matches with the stored hash
+// returns false if the password is too long or doesn't match
+//
+function phpass_check($password, $storedHash)
+{
+	if (strlen($password) > 72) return false;
+	require_once("PasswordHash.php");
+	$check = $hasher->CheckPassword($password, $stored_hash);
+	unset($hasher);
+	return $check;
 }
 
 

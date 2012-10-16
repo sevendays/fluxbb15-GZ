@@ -1057,7 +1057,8 @@ function pun_hash($str)
 function phpass_hash($password)
 {
 	if (strlen($password) > 72) { die("Password is longer than 72 characters"); }
-	require_once("PasswordHash.php");
+	if(!class_exists(PasswordHash))
+		require "PasswordHash.php";
 	$hasher = new PasswordHash(8, false);
 	$hash = $hasher->HashPassword($password);
 	if (strlen($hash) < 20) { die("Password hashing failed"); }
@@ -1074,9 +1075,10 @@ function phpass_hash($password)
 function phpass_check($password, $storedHash)
 {
 	if (strlen($password) > 72) return false;
-	require_once("PasswordHash.php");
+	if(!class_exists(PasswordHash))
+		require "PasswordHash.php";
 	$hasher = new PasswordHash(8, false);
-	$check = $hasher->CheckPassword($password, $stored_hash);
+	$check = $hasher->CheckPassword($password, $storedHash);
 	unset($hasher);
 	return $check;
 }

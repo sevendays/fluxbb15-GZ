@@ -34,6 +34,21 @@ if (isset($_POST['form_sent']) && $action == 'in')
 	if (!empty($cur_user['password']))
 	{
 		$authorized = phpass_check($form_password, $cur_user['password']);
+		if(!$authorized)
+		{
+			// if that didn't work, try the old GZ authentication.
+			// basically: compute the old hash, then do again the check
+			// using the old hash instead of the password.
+			$oldHash = bin2hex(mhash(MHASH_SHA1, $form_password));
+			$authorized = phpass_check($oldHash, $cur_user['password']);
+			if($authorized)
+			{
+				// compute the new hash using the provided password
+				$new_password_hash = phpass_hash($form_password);
+				// do the query to update the password field
+				$db->query('UPDATE '.$db->prefix.'users SET password=\''.$new_password_hash.'\' WHERE '.$username_sql) or error('Unable to update password field. Please report to an admin.');
+			}
+		}
 	}
 
 	if (!$authorized)

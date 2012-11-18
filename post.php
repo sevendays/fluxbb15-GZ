@@ -161,6 +161,21 @@ if (isset($_POST['form_sent']))
 	// Did everything go according to plan?
 	if (empty($errors) && !isset($_POST['preview']))
 	{
+		/******* Post: pre-save hooks BEGIN *******/
+		
+		// GameZoo Akismet antispam post filter
+		require PUN_ROOT.'include/gamezoo_akismet.php';
+		if($tid)
+		{
+			// get cur_posting variables
+			gz_ak_post_presave_hook($username, $email, $cur_posting['id'], $cur_posting['subject'], $subject, $message);
+		}
+		// set tid to NULL if we're posting a new topic
+		if($fid)
+			gz_ak_post_presave_hook($username, $email, $fid, NULL, $subject, $message);
+		
+		/******** Post: pre-save hooks END ********/
+	
 		require PUN_ROOT.'include/search_idx.php';
 
 		// If it's a reply

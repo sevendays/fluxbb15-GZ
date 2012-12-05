@@ -322,6 +322,16 @@ while ($cur_post = $db->fetch_assoc($result))
 		$post_actions[] = '<li class="postedit"><span><a href="edit.php?id='.$cur_post['id'].'">'.$lang_topic['Edit'].'</a></span></li>';
 		$post_actions[] = '<li class="postquote"><span><a href="post.php?tid='.$id.'&amp;qid='.$cur_post['id'].'">'.$lang_topic['Quote'].'</a></span></li>';
 	}
+	
+	/******* Post: pre-view hooks BEGIN *******/
+	
+	// GameZoo Akismet antispam post filter
+	require PUN_ROOT.'include/gamezoo_akismet.php';
+	// insert "vote as spam" in $post_actions[] for normal users
+	// insert "mark as spam" in $post_actions[] for admins and moderators
+	gz_ak_viewtopic_preview_hook($post_actions, $cur_post['g_id'], $cur_post['id']);
+	
+	/******** Post: pre-view hooks END ********/
 
 	// Perform the main parsing of the message (BBCode, smilies, censor words etc)
 	$cur_post['message'] = parse_message($cur_post['message'], $cur_post['hide_smilies']);

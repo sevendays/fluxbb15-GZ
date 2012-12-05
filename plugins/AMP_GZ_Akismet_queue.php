@@ -101,7 +101,7 @@ function gz_ak_queue_show($errors = NULL)
 			</div>
 			
 			<?php
-			$result = $db->query('SELECT id, poster, poster_id, poster_ip, poster_email, subject, message, posted FROM '.$db->prefix.'gz_akismet') or error('Unable to fetch spam table', __FILE__, __LINE__, $db->error());
+			$result = $db->query('SELECT id, poster, poster_id, poster_ip, poster_email, subject, message, posted FROM '.$db->prefix.'gz_akismet_queue') or error('Unable to fetch spam table', __FILE__, __LINE__, $db->error());
 			if($db->num_rows($result) == 0)
 			{
 				?>
@@ -208,11 +208,12 @@ function gz_ak_queue_spamactions_submitted()
 
 function gz_ak_queue_spamactions()
 {
-	// fetch all
-	$spams = $_POST['is_spam'];
-	$hams = $_POST['is_ham'];
+	global $gz_ak_lang;
 	
-	// errors
+	// fetch all from form
+	$spams = (isset($_POST['is_spam'])) ? $_POST['is_spam'] : array();
+	$hams = (isset($_POST['is_ham'])) ? $_POST['is_ham'] : array();
+	
 	$errors = array();
 	
 	// check that we have numeric values for spam ids
@@ -251,7 +252,6 @@ function gz_ak_queue_spamactions()
 		require PUN_ROOT.'include/gamezoo_akismet.php';
 	else
 	{
-		global $gz_ak_lang;
 		$errors[] = $gz_ak_lang['spam ham overlap'];
 		gz_ak_queue_show($errors);
 		return;
@@ -261,14 +261,22 @@ function gz_ak_queue_spamactions()
 	$total_spam_deleted = gz_ak_spams($realspams);
 	
 	// restore hams
-	$total_hams_restored = gz_ak_hams($realhams);
+	$restore_errors = array();
+	$total_hams_restored = gz_ak_hams($realhams, $restore_errors);
 	
 	// print success and redirect to plugin main page
-	global $gz_ak_lang;
 	?>
 	<div class="blockform">
 		<h1><span><b>A&sdot;kis&sdot;met</b> for FluxBB</span></h1>
 		<p><?php echo $gz_ak_lang['total spam deleted'] . $total_spam_deleted .'<br/>'. $gz_ak_lang['total ham restored']. $total_hams_restored; ?>.</p>
+		<?php
+		if (!empty($restore_errors))
+		echo '<p>'.$gz_ak_lang['hams restore errors'].'</p>';
+		foreach($restore_errors as $err)
+		{
+			echo '<p>'.$err.'</p>';
+		}
+		?>
 		<p>
 			<a href="<?php echo pun_htmlspecialchars($_SERVER['REQUEST_URI']) ?>">
 				<?php echo $gz_ak_lang['back to queue']; ?>

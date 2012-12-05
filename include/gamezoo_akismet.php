@@ -1,5 +1,12 @@
 <?php
 
+/** 
+ * name: gz_ak_post_presave_hook executed before saving new posts to database.
+ * @param
+ * @return
+ * 
+ */
+
 function gz_ak_post_presave_hook($username, $email, $topic_id, $forum_id, $subject, &$message)
 {
 	global $pun_user, $pun_config;
@@ -16,60 +23,62 @@ function gz_ak_post_presave_hook($username, $email, $topic_id, $forum_id, $subje
 	
 	// check that at least one trigger is true
 	$trigger1 = (pun_strlen($message) > $gz_ak_cfg['post_minchars'])?true:false;
-	$trigger2 = ($gz_ak_cfg['link_presence'] > 0 && stristr($string, 'http') !== false)?true:false;
+	$trigger2 = ($gz_ak_cfg['link_presence'] > 0 && stristr($message, 'http') !== false)?true:false;
 	if(!$trigger1 && !$trigger2) return;
 	
 	// OK: we may now fire up Akismet.
 	if(!class_exists('Akismet'))
 		require PUN_ROOT.'include/Akismet.class.php';
+	
 	$ak = new Akismet(get_base_url(true), $gz_ak_cfg['api_key']);
 	$ak->setCommentAuthor($username);
 	$ak->setCommentAuthorEmail($email);
-	$ak->setCommentContent($message);
+	//$ak->setCommentContent($message); // we're sending the original $_POST content. The $message is the filtered and censored one.
+	$ak->setCommentContent($_POST['req_message']);
 	$ak->setCommentType('forum-post'); // http://blog.akismet.com/2012/06/19/pro-tip-tell-us-your-comment_type/
 	$ak->setCommentUserAgent($_SERVER['HTTP_USER_AGENT']);
 	// try to fill in some more info
 	if(isset($pun_user['url'])) $ak->setCommentAuthorURL($pun_user['url']);
-	if($akismet->isCommentSpam())
+	if($ak->isCommentSpam())
 	{
 		//ZAPPED! Put the message in the review queue and ban the user.
-		queue_message($username, $email, $message, $subject, $topic_id, $forum_id, $hide_smilies);
-		ban_user($username, $email);
+		$user_id = ($pun_user['is_guest'])? 1 : $pun_user['id'];
+		gz_ak_queue_message($username, $user_id, $email, $message, $subject, $topic_id, $forum_id, $hide_smilies, true);
+		gz_ak_ban_user($username, $email);
 		byebye();
 	}
 	// Ok, this message is not spam.
 	return;
 }
 
-function gz_ak_queue_message($username, $email, &$message, $subject, $topic_id, $forum_id)
+function gz_ak_queue_message($username, $user_id, $email, &$message, $subject, $topic_id, $forum_id, $insert_user_agent = false)
 {
-	global $pun_user, $db;
+	global $db;
 	$username = ($username != '') ? '\''.$db->escape($username).'\'' : 'NULL';
-	$user_id = ($pun_user['is_guest'])? 1 : $pun_user['id'];
 	$last_ip = get_remote_address();
 	$email = ($email != '') ? '\''.$db->escape($email).'\'' : 'NULL';
 	$subject = ($subject != '') ? '\''.$db->escape($subject).'\'' : 'NULL';
+	
+	// Replace four-byte characters (MySQL cannot handle them)
+	$message = strip_bad_multibyte_chars($message);
+	
 	$message = ($message != '') ? '\''.$db->escape($message).'\'' : 'NULL';
 	$posted = time();
 	$hide_smilies = isset($_POST['hide_smilies']) ? '1' : '0';
-	$user_agent = ($_SERVER['HTTP_USER_AGENT'] != '') ? '\''.$db->escape($_SERVER['HTTP_USER_AGENT']).'\'' : 'NULL';
+	$user_agent = ($_SERVER['HTTP_USER_AGENT'] != '' && $insert_user_agent) ? '\''.$db->escape($_SERVER['HTTP_USER_AGENT']).'\'' : 'NULL';
 	
 	// insert: may be a reply to existing topic, or a new topic
+	$q ="INSERT INTO ".$db->prefix."gz_akismet_queue (poster, poster_id, poster_ip, poster_email, subject, message, hide_smilies, posted, topic_id, forum_id, user_agent) VALUES ($username,'$user_id','$last_ip',$email,$subject,$message,'$hide_smilies','$posted',NULL,'$forum_id',$user_agent)"; 
+	
 	if($topic_id)
-	{
-		$db->query("INSERT INTO ".$db->prefix."gz_akismet (poster, poster_id, poster_ip, email, subject, message, hide_smilies, posted, topic_id, forum_id, user_agent) VALUES($username,'$user_id','$last_ip',$email,$subject,$message,'$hide_smilies','$posted','$topic_id','$forum_id',$user_agent)") or error('Unable to insert into Akismet spam queue', __FILE__, __LINE__, $db->error());
-		$new_pid = $db->insert_id();
-	}
-	else if($forum_id)
-	{
-		$db->query("INSERT INTO ".$db->prefix."gz_akismet (poster, poster_id, poster_ip, email, subject, message, hide_smilies, posted, topic_id, forum_id) VALUES($username,'$user_id','$last_ip',$email,$subject,$message,'$hide_smilies','$posted',NULL,'$forum_id',$user_agent)") or error('Unable to insert into Akismet spam queue', __FILE__, __LINE__, $db->error());
-		$new_pid = $db->insert_id();
-	}
+		$q = "INSERT INTO ".$db->prefix."gz_akismet_queue (poster, poster_id, poster_ip, poster_email, subject, message, hide_smilies, posted, topic_id, forum_id, user_agent) VALUES ($username,'$user_id','$last_ip',$email,$subject,$message,'$hide_smilies','$posted','$topic_id','$forum_id',$user_agent)";
+	
+	$db->query($q) or error('Unable to insert into Akismet spam queue', __FILE__, __LINE__, $db->error());
 }
 
 function gz_ak_ban_user($username, $email)
 {
-	global $gz_ak_lang;
+	global $db, $gz_ak_lang;
 	$username = $db->escape($username);
 	$ip = get_remote_address();
 	$email = ($email != '') ? '\''.$db->escape($email).'\'' : 'NULL';
@@ -98,14 +107,13 @@ function gz_ak_spams($ids)
 {
 	if(empty($ids)) return 0;
 	
-	global $db, $pun_config;
-	if(!isset($pun_config['o_gz_akismet'])) return 0;
+	global $db;
 	
 	// retrieve the user ids, let's have the database to filter spam ids too
 	$userids = array();
 	$realspamids = array();
 	$idsquery = implode(',', $ids);
-	$result = $db->query('SELECT id, poster_id FROM '.$db->prefix.'gz_akismet WHERE id IN ('.$idsquery.')') or error('Unable to fetch userid from spam queue', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT id, poster_id FROM '.$db->prefix.'gz_akismet_queue WHERE id IN ('.$idsquery.')') or error('Unable to fetch userid from spam queue', __FILE__, __LINE__, $db->error());
 	if($db->num_rows($result) == 0) return 0;
 	while($row = $db->fetch_row($result))
 	{
@@ -113,43 +121,41 @@ function gz_ak_spams($ids)
 		$userids[] = $row[1];
 	}
 	
-	// clean user infos
-	$db->query('UPDATE '.$db->prefix.'users SET title=NULL, realname=NULL, url=NULL, jabber=NULL, icq=NULL, msn=NULL, aim=NULL, yahoo=NULL, location=NULL, signature=NULL WHERE id IN ('.implode(',', $realspamids).')') or error('Unable to clean spammers\' userinfos', __FILE__, __LINE__, $db->error());
+	// clean user infos, disable email sending
+	$db->query('UPDATE '.$db->prefix.'users SET title=NULL, realname=NULL, url=NULL, jabber=NULL, icq=NULL, msn=NULL, aim=NULL, yahoo=NULL, location=NULL, signature=NULL, email_setting=2 WHERE id IN ('.implode(',', $userids).')') or error('Unable to clean spammers\' userinfos', __FILE__, __LINE__, $db->error());
 	
 	// Delete user avatars
 	foreach ($userids as $user_id)
 		delete_avatar($user_id);
 	
 	// delete spams from the queue
-	$db->query('DELETE FROM '.$db->prefix.'gz_akismet WHERE id IN ('.implode(',', $realspamids).')') or error('Unable to delete spam from spam queue', __FILE__, __LINE__, $db->error());
+	$db->query('DELETE FROM '.$db->prefix.'gz_akismet_queue WHERE id IN ('.implode(',', $realspamids).')') or error('Unable to delete spam from spam queue', __FILE__, __LINE__, $db->error());
 	
 	return count($realspamids);
 }
 
-function gz_ak_hams($ids)
+function gz_ak_hams($ids, &$errors)
 {
 	if(empty($ids)) return 0;
 	
-	global $db, $pun_config;
-	if(!isset($pun_config['o_gz_akismet'])) return 0;
-	$gz_ak_cfg = json_decode($pun_config['o_gz_akismet'], true);
+	global $db, $gz_ak_lang, $gz_ak_cfg, $pun_config;
 	
 	// retrieve all, let's have the database filter out ids
 	// since hams are not so frequent, it's acceptable to read all data in a single pass
 	$hams = array();
 	$userids = array();
-	$result = $db->query('SELECT * FROM '.$db->prefix.'gz_akismet WHERE id IN ('.implode(',', $ids).')') or error('Unable to fetch userid from spam queue', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT * FROM '.$db->prefix.'gz_akismet_queue WHERE id IN ('.implode(',', $ids).')') or error('Unable to fetch userid from spam queue', __FILE__, __LINE__, $db->error());
 	if($db->num_rows($result) == 0) return 0;
 	while($ham = $db->fetch_assoc($result))
 	{
-		$userids[] = $ham['poster_id']; // used to restore users
+		$usernames[] = $ham['poster'];
 		$hams[] = $ham; // used to restore posts and teach akismet something
 	}
 	
 	if(empty($hams)) return 0;
 	
 	//unban users
-	$db->query('DELETE FROM '.$db->prefix.'bans WHERE id IN('.implode(',', $userids).')') or error('Unable to delete ban', __FILE__, __LINE__, $db->error());
+	$db->query('DELETE FROM '.$db->prefix.'bans WHERE username IN(\''.implode('\',\'', $usernames).'\')') or error('Unable to delete ban', __FILE__, __LINE__, $db->error());
 	// Regenerate the bans cache
 	if (!defined('FORUM_CACHE_FUNCTIONS_LOADED'))
 		require PUN_ROOT.'include/cache.php';
@@ -158,54 +164,59 @@ function gz_ak_hams($ids)
 	// restore posts
 	foreach($hams as $ham)
 	{
-		$tid = $ham['tid'];
+		$tid = (is_null($ham['topic_id'])) ? 0 : $ham['topic_id'];
 		// We saved the forum id in posts.php before the hook, choosing to rely only on $tid presence/absence.
 		$fid = $ham['forum_id'];
-		
-		// check that the topic still exists before trying anything, only if it's a reply
+			
+		// if it's a reply check that the topic still exists
 		if($tid)
 		{
-			$result = $db->query('SELECT id FROM '.$db->prefix.'topics WHERE id='.$tid) or error('Unable to count topics', __FILE__, __LINE__, $db->error());
+			$result = $db->query('SELECT id FROM '.$db->prefix.'topics WHERE id='.$tid) or error('Unable to check topic existence', __FILE__, __LINE__, $db->error());
 			if (!$db->num_rows($result))
 			{
-				// oh good, the topic disappeared in the meantime. Send this post to oblivion.
+				// oh good, the topic disappeared in the meantime. Send to oblivion.
+				$errors[] = $gz_ak_lang['topic deleted'];
 				continue;
 			}
 			unset($result);
 		}
 		
-		// check that the forum still exists before trying anything,
-		$result = $db->query('SELECT forum_name FROM '.$db->prefix.'forums WHERE id='.$fid) or error('Unable to fetch forum name', __FILE__, __LINE__, $db->error());
+		// check that the forum still exists
+		$result = $db->query('SELECT forum_name FROM '.$db->prefix.'forums WHERE id='.$fid) or error('Unable to check forum existence', __FILE__, __LINE__, $db->error());
 		if (!$db->num_rows($result))
 		{
-			// oh good, the forum disappeared in the meantime. Send this post to oblivion.
+			// oh good, the forum disappeared in the meantime. Send to oblivion.
+			$errors[] = $gz_ak_lang['forum deleted'];
 			continue;
 		}
+		
+		// regen all other variables used in post.php
 		$cur_posting = $db->fetch_assoc($result);
 		$cur_posting['id'] = $fid;
 		// The subject was saved too, before the hook.
-		$cur_posting['subject'] = $subject;
+		$cur_posting['subject'] = $ham['subject'];
 		
-		// things lacking: $stick_topic, $subscribe, $is_subscribed, $pun_user
-		$is_guest = ($ham['poster_id'] == 1) ? true : false;
+		// things lacking: $stick_topic, $subject, $subscribe, $is_subscribed, $pun_user
+		$is_guest = ($ham['poster_id'] == PUN_GUEST) ? true : false;
 		$stick_topic = 0;
 		$subscribe = 0;
-		$is_subscribed = false;
-		
-		// regen all other variables used in post.php
+		$subject = $ham['subject'];
+		$is_subscribed = false; // send the email to the zapped user, at least he'll know he's been unbanned
 		$email = $ham['poster_email'];
 		$username = $ham['poster'];
 		$message = $ham['message'];
 		$hide_smilies = $ham['hide_smilies'];
-		
 		// time() is used instead of the original timestamp $ham['posted'] because it would break notifications to topic subscribers.
 		// the problem is that posts are "ORDER BY id" in viewtopic.php, while they should be ordered by date.
 		// so this maybe isn't the "real" last post. But since viewtopic.php orders by id, this will be the last post.
 		$now = time();
+
+		$hide_smilies = isset($_POST['hide_smilies']) ? '1' : '0';
+		$subscribe = isset($_POST['subscribe']) ? '1' : '0';
+		$stick_topic = isset($_POST['stick_topic']) && $is_admmod ? '1' : '0';
 		
-		if ($pun_config['o_censoring'] == '1')
-			$censored_message = pun_trim(censor_words($message));
-		
+		// update search idx
+		require PUN_ROOT.'include/search_idx.php';
 		
 		/*** BEGIN C&P FROM post.php, with some modifications in queries and guest detection ***/
 		// If it's a reply
@@ -452,13 +463,13 @@ function gz_ak_hams($ids)
 		/*** END C&P FROM post.php ***/
 	}
 	
-	// signal ham to akismet
+	// signal hams to akismet
 	if(!class_exists('Akismet'))
 		require PUN_ROOT.'include/Akismet.class.php';
+	$ak = new Akismet(get_base_url(true), $gz_ak_cfg['api_key']);
 	
 	foreach($hams as $ham)
 	{
-		$ak = new Akismet(get_base_url(true), $gz_ak_cfg['api_key']);
 		$ak->setCommentAuthor($ham['poster']);
 		$ak->setCommentAuthorEmail($ham['poster_email']);
 		$ak->setCommentContent($ham['message']);
@@ -469,7 +480,7 @@ function gz_ak_hams($ids)
 	}
 	
 	// delete hams from the spam queue
-	$db->query('DELETE FROM '.$db->prefix.'gz_akismet WHERE id IN ('.implode(',', $ids).')') or error('Unable to delete hams from queue', __FILE__, __LINE__, $db->error());
+	$db->query('DELETE FROM '.$db->prefix.'gz_akismet_queue WHERE id IN ('.implode(',', $ids).')') or error('Unable to delete hams from queue', __FILE__, __LINE__, $db->error());
 	
 	// return the amount of hams restored
 	return count($hams);
@@ -487,16 +498,40 @@ function gz_ak_autodelete_spams()
 	if(!isset($pun_config['o_gz_akismet'])) return 0;
 	$gz_ak_cfg = json_decode($pun_config['o_gz_akismet'], true);
 	
-	if($gz_ak_cfg['spam_queue_days'] != 0) return 0;
+	if(!isset($gz_ak_cfg['spam_queue_days']) || $gz_ak_cfg['spam_queue_days'] != 0) return 0;
 	
 	global $db;
 	// gather old spam
 	$start_time = mktime(0,0,0) - ($gz_ak_cfg['spam_queue_days'] + 1) * 86400; // 1d = 86400s
-	$result = $db->query('SELECT id FROM '.$db->prefix.'gz_akismet WHERE posted < \''.$start_time.'\'') or error('Unable to select older spams from spam table', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT id FROM '.$db->prefix.'gz_akismet_queue WHERE posted < \''.$start_time.'\'') or error('Unable to select older spams from spam table', __FILE__, __LINE__, $db->error());
 	if($db->num_rows($result) == 0) return 0;
 	$oldspams = array();
 	while ($row = $db->fetch_row($result))
 		$oldspams[] = $row[0];
 	// delete them
 	return gz_ak_spams($oldspams);
+}
+
+// return additional post action "mark as spam"
+function gz_ak_viewtopic_preview_hook(&$actions, $poster_group_id, $post_id)
+{
+	// determine if the user is a trusted user and if the poster is a monitored user
+	global $pun_config, $pun_user, $db;
+	$gz_ak_cfg = array();
+	if(!isset($pun_config['o_gz_akismet'])) return;
+	$gz_ak_cfg = json_decode($pun_config['o_gz_akismet'], true);
+	
+	if(!isset($gz_ak_cfg['monitored_groups']) || !isset($gz_ak_cfg['trusted_groups'])) return;
+	
+	$monitored_groups = explode(',', $gz_ak_cfg['monitored_groups']);
+	$trusted_groups = explode(',', $gz_ak_cfg['trusted_groups']);
+	
+	$is_trusted = (in_array($pun_user['g_id'], $trusted_groups)) ? true : false;
+	if(!$is_trusted) return;
+	
+	$is_monitored = (in_array($poster_group_id, $monitored_groups)) ? true : false;
+	if(!$is_monitored) return;
+	
+	// offer the option to "mark as spam".
+	$actions[] = '<li class="postreport"><span><a href="gamezoo_akismet_spam.php?id='.$post_id.'">'.'This is SPAM!'.'</a></span></li>';
 }

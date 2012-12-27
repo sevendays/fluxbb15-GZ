@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /** 
  * name: gz_ak_post_presave_hook executed before saving new posts to database.

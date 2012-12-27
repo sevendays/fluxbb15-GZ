@@ -45,7 +45,7 @@ function gz_ak_post_presave_hook($username, $email, $topic_id, $forum_id, $subje
 		$user_id = ($pun_user['is_guest'])? 1 : $pun_user['id'];
 		gz_ak_queue_message($username, $user_id, $email, $message, $subject, $topic_id, $forum_id, $hide_smilies, true);
 		gz_ak_ban_user($username, $email);
-		byebye();
+		gz_ak_byebye();
 	}
 	// Ok, this message is not spam.
 	return;

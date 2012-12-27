@@ -153,6 +153,13 @@ $forum_date_formats = array($pun_config['o_date_format'], 'Y-m-d', 'Y-d-m', 'd-m
 $pun_user = array();
 check_cookie($pun_user);
 
+/** COMMON HOOK **/
+
+// BadBehavior antispam service
+require PUN_ROOT.'include/bad-behavior-fluxbb.php';
+
+/** COMMON HOOK END **/
+
 // Attempt to load the common language file
 if (file_exists(PUN_ROOT.'lang/'.$pun_user['language'].'/common.php'))
 	include PUN_ROOT.'lang/'.$pun_user['language'].'/common.php';

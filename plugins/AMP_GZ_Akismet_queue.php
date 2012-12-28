@@ -4,8 +4,8 @@ if (!defined('PUN'))
 	exit;
 
 // We want the complete error message if the script fails
-if (!defined('PUN_DEBUG'))
-	define('PUN_DEBUG', 1);
+//if (!defined('PUN_DEBUG'))
+//	define('PUN_DEBUG', 1);
 	
 // Load the akismet_gamezoo.php language file
 require PUN_ROOT.'lang/'.$admin_language.'/gamezoo_akismet_lang.php';

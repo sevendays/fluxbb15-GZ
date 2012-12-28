@@ -10,7 +10,7 @@ if (!defined('PUN_ROOT'))
 	exit('The constant PUN_ROOT must be defined and point to a valid FluxBB installation root directory.');
 
 // Define the version and database revision that this code was written for
-define('FORUM_VERSION', '1.5.0');
+define('FORUM_VERSION', '1.5.1');
 
 define('FORUM_DB_REVISION', 18);
 define('FORUM_SI_REVISION', 2);
@@ -152,13 +152,6 @@ $forum_date_formats = array($pun_config['o_date_format'], 'Y-m-d', 'Y-d-m', 'd-m
 // Check/update/set cookie and fetch user info
 $pun_user = array();
 check_cookie($pun_user);
-
-/** COMMON HOOK **/
-
-// BadBehavior antispam service
-require PUN_ROOT.'include/bad-behavior-fluxbb.php';
-
-/** COMMON HOOK END **/
 
 // Attempt to load the common language file
 if (file_exists(PUN_ROOT.'lang/'.$pun_user['language'].'/common.php'))

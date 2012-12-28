@@ -853,7 +853,7 @@ function paginate($num_pages, $cur_page, $link)
 	{
 		// Add a previous page link
 		if ($num_pages > 1 && $cur_page > 1)
-			$pages[] = '<a rel="prev" '.(empty($pages) ? ' class="item1"' : '').' href="'.$link.'&amp;p='.($cur_page - 1).'">'.$lang_common['Previous'].'</a>';
+			$pages[] = '<a rel="prev"'.(empty($pages) ? ' class="item1"' : '').' href="'.$link.'&amp;p='.($cur_page - 1).'">'.$lang_common['Previous'].'</a>';
 
 		if ($cur_page > 3)
 		{
@@ -884,7 +884,7 @@ function paginate($num_pages, $cur_page, $link)
 
 		// Add a next page link
 		if ($num_pages > 1 && !$link_to_all && $cur_page < $num_pages)
-			$pages[] = '<a rel="next" '.(empty($pages) ? ' class="item1"' : '').' href="'.$link.'&amp;p='.($cur_page +1).'">'.$lang_common['Next'].'</a>';
+			$pages[] = '<a rel="next"'.(empty($pages) ? ' class="item1"' : '').' href="'.$link.'&amp;p='.($cur_page +1).'">'.$lang_common['Next'].'</a>';
 	}
 
 	return implode(' ', $pages);
@@ -1395,7 +1395,7 @@ function redirect($destination_url, $message)
 	$page_title = array(pun_htmlspecialchars($pun_config['o_board_title']), $lang_common['Redirecting']);
 
 ?>
-<meta http-equiv="refresh" content="<?php echo $pun_config['o_redirect_delay'] ?>;URL=<?php echo str_replace(array('<', '>', '"'), array('&lt;', '&gt;', '&quot;'), $destination_url) ?>" />
+<meta http-equiv="refresh" content="<?php echo $pun_config['o_redirect_delay'] ?>;URL=<?php echo $destination_url ?>" />
 <title><?php echo generate_page_title($page_title) ?></title>
 <link rel="stylesheet" type="text/css" href="style/<?php echo $pun_user['style'].'.css' ?>" />
 <?php

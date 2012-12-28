@@ -4,8 +4,8 @@ if (!defined('PUN'))
 	exit;
 
 // We want the complete error message if the script fails
-if (!defined('PUN_DEBUG'))
-	define('PUN_DEBUG', 1);
+//if (!defined('PUN_DEBUG'))
+//	define('PUN_DEBUG', 1);
 	
 // Load the akismet_gamezoo.php language file
 require PUN_ROOT.'lang/'.$admin_language.'/gamezoo_akismet_lang.php';
@@ -142,7 +142,7 @@ function gz_ak_install()
 	?>
 	<div class="blockform">
 		<h1><span><b>A&sdot;kis&sdot;met</b> for FluxBB</span></h1>
-		<p><?php echo $gz_ak_lang['database create success']; ?>.</p>
+		<p><?php echo $gz_ak_lang['database create success']; ?></p>
 		<p>
 			<a href="<?php echo pun_htmlspecialchars($_SERVER['REQUEST_URI']) ?>">
 				<?php echo $gz_ak_lang['start configure']; ?>

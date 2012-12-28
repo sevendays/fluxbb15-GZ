@@ -70,9 +70,24 @@ if (isset($_POST['form_sent']))
 
 	if ($db->num_rows($result))
 		message($lang_register['Registration flood']);
-
-
-	$username = pun_trim($_POST['req_user']);
+	
+	/*** REGISTRATION FORM SENT HOOK BEGIN ***/
+	
+	// basic idea: the standard field "req_user" now is "gz_user".
+	// TODO develop a mod that allows to change it
+	// "req_user" should always be empty.
+	// human spammers can still register --> akismet
+	
+	if(isset($_POST['reg_user']))
+	{
+		if(!empty($_POST['reg_user']))
+			// TODO what should be the best strategy?
+			exit();
+	}
+	
+	/*** ANTISPAM REGISTRATION HOOK END ***/
+	
+	$username = pun_trim($_POST['gz_user']);
 	$email1 = strtolower(pun_trim($_POST['req_email1']));
 
 	if ($pun_config['o_regs_verify'] == '1')
@@ -257,8 +272,8 @@ if (isset($_POST['form_sent']))
 
 
 $page_title = array(pun_htmlspecialchars($pun_config['o_board_title']), $lang_register['Register']);
-$required_fields = array('req_user' => $lang_common['Username'], 'req_password1' => $lang_common['Password'], 'req_password2' => $lang_prof_reg['Confirm pass'], 'req_email1' => $lang_common['Email'], 'req_email2' => $lang_common['Email'].' 2');
-$focus_element = array('register', 'req_user');
+$required_fields = array('gz_user' => $lang_common['Username'], 'req_password1' => $lang_common['Password'], 'req_password2' => $lang_prof_reg['Confirm pass'], 'req_email1' => $lang_common['Email'], 'req_email2' => $lang_common['Email'].' 2');
+$focus_element = array('register', 'gz_user');
 define('PUN_ACTIVE_PAGE', 'register');
 require PUN_ROOT.'header.php';
 
@@ -305,7 +320,10 @@ if (!empty($errors))
 					<legend><?php echo $lang_register['Username legend'] ?></legend>
 					<div class="infldset">
 						<input type="hidden" name="form_sent" value="1" />
-						<label class="required"><strong><?php echo $lang_common['Username'] ?> <span><?php echo $lang_common['Required'] ?></span></strong><br /><input type="text" name="req_user" value="<?php if (isset($_POST['req_user'])) echo pun_htmlspecialchars($_POST['req_user']); ?>" size="25" maxlength="25" /><br /></label>
+						<label class="required"><strong><?php echo $lang_common['Username'] ?> <span><?php echo $lang_common['Required'] ?></span></strong><br />
+						<input class="lolle" type="text" name="req_user" value="<?php if (isset($_POST['req_user'])) echo pun_htmlspecialchars($_POST['req_user']); ?>" size="25" maxlength="25" />
+						<input type="text" name="gz_user" value="<?php if (isset($_POST['gz_user'])) echo pun_htmlspecialchars($_POST['gz_user']); ?>" size="25" maxlength="25" />
+						<br /></label>
 					</div>
 				</fieldset>
 			</div>

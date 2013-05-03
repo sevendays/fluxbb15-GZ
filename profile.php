@@ -100,14 +100,14 @@ if ($action == 'change_pass')
 
 		if (!empty($cur_user['password']))
 		{
-			if (phpass_check($old_password, $cur_user['password']) || $pun_user['is_admmod'])
+			if (phpass_check($old_password, $cur_user['password']) || $pun_user['is_admmod']) /* KEEP. PHPass. */
 				$authorized = true;
 		}
 
 		if (!$authorized)
 			message($lang_profile['Wrong pass']);
 
-		$new_password_hash = phpass_hash($new_password1);
+		$new_password_hash = phpass_hash($new_password1); /* KEEP. PHPass. */
 
 		$db->query('UPDATE '.$db->prefix.'users SET password=\''.$new_password_hash.'\''.(!empty($cur_user['salt']) ? ', salt=NULL' : '').' WHERE id='.$id) or error('Unable to update password', __FILE__, __LINE__, $db->error());
 
@@ -191,7 +191,7 @@ else if ($action == 'change_email')
 	}
 	else if (isset($_POST['form_sent']))
 	{
-		if (!phpass_check($_POST['req_password'], $pun_user['password']))
+		if (!phpass_check($_POST['req_password'], $pun_user['password'])) /* KEEP. PHPass. */
 			message($lang_profile['Wrong pass']);
 
 		require PUN_ROOT.'include/email.php';
@@ -456,6 +456,9 @@ else if (isset($_POST['update_group_membership']))
 
 	$new_group_id = intval($_POST['group_id']);
 
+	$result = $db->query('SELECT group_id FROM '.$db->prefix.'users WHERE id='.$id) or error('Unable to fetch user group', __FILE__, __LINE__, $db->error());
+	$old_group_id = $db->result($result);
+
 	$db->query('UPDATE '.$db->prefix.'users SET group_id='.$new_group_id.' WHERE id='.$id) or error('Unable to change user group', __FILE__, __LINE__, $db->error());
 
 	// Regenerate the users info cache
@@ -463,6 +466,18 @@ else if (isset($_POST['update_group_membership']))
 		require PUN_ROOT.'include/cache.php';
 
 	generate_users_info_cache();
+
+	if ($old_group_id == PUN_ADMIN || $new_group_id == PUN_ADMIN)
+	{
+		$result = $db->query('SELECT id FROM '.$db->prefix.'users WHERE group_id='.PUN_ADMIN) or error('Unable to fetch users info', __FILE__, __LINE__, $db->error());
+		$admin_ids = array();
+		for ($i = 0;$cur_user_id = $db->result($result, $i);$i++)
+			$admin_ids[] = $cur_user_id;
+
+		$db->query('UPDATE '.$db->prefix.'config SET conf_value=\''.implode(',', $admin_ids).'\' WHERE conf_name=\'o_admin_ids\'') or error('Unable to update board config', __FILE__, __LINE__, $db->error());
+
+		generate_config_cache();
+	}
 
 	$result = $db->query('SELECT g_moderator FROM '.$db->prefix.'groups WHERE g_id='.$new_group_id) or error('Unable to fetch group', __FILE__, __LINE__, $db->error());
 	$new_group_mod = $db->result($result);
@@ -637,6 +652,18 @@ else if (isset($_POST['delete_user']) || isset($_POST['delete_user_comply']))
 			require PUN_ROOT.'include/cache.php';
 
 		generate_users_info_cache();
+
+		if ($group_id == PUN_ADMIN)
+		{
+			$result = $db->query('SELECT id FROM '.$db->prefix.'users WHERE group_id='.PUN_ADMIN) or error('Unable to fetch users info', __FILE__, __LINE__, $db->error());
+			$admin_ids = array();
+			for ($i = 0;$cur_user_id = $db->result($result, $i);$i++)
+				$admin_ids[] = $cur_user_id;
+
+			$db->query('UPDATE '.$db->prefix.'config SET conf_value=\''.implode(',', $admin_ids).'\' WHERE conf_name=\'o_admin_ids\'') or error('Unable to update board config', __FILE__, __LINE__, $db->error());
+
+			generate_config_cache();
+		}
 
 		redirect('index.php', $lang_profile['User delete redirect']);
 	}
@@ -1781,7 +1808,7 @@ else
 						if ($cur_category != 0)
 							echo "\n\t\t\t\t\t\t\t".'</div>'."\n";
 
-						echo "\t\t\t\t\t\t\t".'<div class="conl">'."\n\t\t\t\t\t\t\t\t".'<p><strong>'.$cur_forum['cat_name'].'</strong></p>'."\n\t\t\t\t\t\t\t\t".'<div class="rbox">';
+						echo "\t\t\t\t\t\t\t".'<div class="conl">'."\n\t\t\t\t\t\t\t\t".'<p><strong>'.pun_htmlspecialchars($cur_forum['cat_name']).'</strong></p>'."\n\t\t\t\t\t\t\t\t".'<div class="rbox">';
 						$cur_category = $cur_forum['cid'];
 					}
 

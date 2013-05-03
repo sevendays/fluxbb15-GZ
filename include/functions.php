@@ -6,6 +6,8 @@
  * License: http://www.gnu.org/licenses/gpl.html GPL version 2 or higher
  */
 
+include PUN_ROOT.'include/srand.php';
+
 
 //
 // Return current timestamp (with microseconds) as a float
@@ -984,22 +986,12 @@ function forum_number_format($number, $decimals = 0)
 //
 function random_key($len, $readable = false, $hash = false)
 {
-	$key = '';
+	$key = secure_random_bytes($len);
 
 	if ($hash)
-		$key = substr(pun_hash(uniqid(rand(), true)), 0, $len);
+		$key = substr(bin2hex($key), 0, $len);
 	else if ($readable)
-	{
-		$chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-		for ($i = 0; $i < $len; ++$i)
-			$key .= substr($chars, (mt_rand() % strlen($chars)), 1);
-	}
-	else
-	{
-		for ($i = 0; $i < $len; ++$i)
-			$key .= chr(mt_rand(33, 126));
-	}
+		$key = substr(base64_encode($key), 0, $len);
 
 	return $key;
 }
@@ -1963,9 +1955,12 @@ function url_valid($url)
 //
 // This function takes care of possibly disabled unicode properties in PCRE builds
 //
-function ucp_preg_replace($pattern, $replace, $subject)
+function ucp_preg_replace($pattern, $replace, $subject, $callback = false)
 {
-	$replaced = preg_replace($pattern, $replace, $subject);
+	if($callback) 
+		$replaced = preg_replace_callback($pattern, create_function('$matches', 'return '.$replace.';'), $subject);
+	else
+		$replaced = preg_replace($pattern, $replace, $subject);
 
 	// If preg_replace() returns false, this probably means unicode support is not built-in, so we need to modify the pattern a little
 	if ($replaced === false)
@@ -1982,6 +1977,14 @@ function ucp_preg_replace($pattern, $replace, $subject)
 	}
 
 	return $replaced;
+}
+
+//
+// A wrapper for ucp_preg_replace
+//
+function ucp_preg_replace_callback($pattern, $replace, $subject)
+{
+	return ucp_preg_replace($pattern, $replace, $subject, true);
 }
 
 //

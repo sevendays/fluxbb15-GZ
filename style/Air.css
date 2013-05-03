@@ -2,6 +2,8 @@
 1. INITIAL SETTINGS
 *****************************************************************/
 
+.lolle { display:none; } /* register form honeypot. */
+
 /* Limited Reset
 ----------------------------------------------------------------*/
 
@@ -27,7 +29,6 @@ html, body, .pun table, .pun div, .pun form, .pun p, .pun h1, .pun h2, .pun h3, 
 
 /* Content Defaults
 ----------------------------------------------------------------*/
-.lolle { display:none; } /* the name doesn't reveal that it's hidden */
 
 .pun {
 	font: 81.25%/1.462em Arial, Helvetica, sans-serif;

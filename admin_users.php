@@ -25,7 +25,7 @@ if (isset($_GET['ip_stats']))
 {
 	$ip_stats = intval($_GET['ip_stats']);
 	if ($ip_stats < 1)
-		message($lang_common['Bad request']);
+		message($lang_common['Bad request'], false, '404 Not Found');
 
 	// Fetch ip count
 	$result = $db->query('SELECT poster_ip, MAX(posted) AS last_used FROM '.$db->prefix.'posts WHERE poster_id='.$ip_stats.' GROUP BY poster_ip') or error('Unable to fetch post info', __FILE__, __LINE__, $db->error());
@@ -63,7 +63,7 @@ if (isset($_GET['ip_stats']))
 	<h2><span><?php echo $lang_admin_users['Results head'] ?></span></h2>
 	<div class="box">
 		<div class="inbox">
-			<table cellspacing="0">
+			<table>
 			<thead>
 				<tr>
 					<th class="tcl" scope="col"><?php echo $lang_admin_users['Results IP address head'] ?></th>
@@ -164,7 +164,7 @@ if (isset($_GET['show_users']))
 	<h2><span><?php echo $lang_admin_users['Results head'] ?></span></h2>
 	<div class="box">
 		<div class="inbox">
-			<table cellspacing="0">
+			<table>
 			<thead>
 				<tr>
 					<th class="tcl" scope="col"><?php echo $lang_admin_users['Results username head'] ?></th>
@@ -208,7 +208,7 @@ if (isset($_GET['show_users']))
 ?>
 				<tr>
 					<td class="tcl"><?php echo '<a href="profile.php?id='.$user_data[$cur_poster['poster_id']]['id'].'">'.pun_htmlspecialchars($user_data[$cur_poster['poster_id']]['username']).'</a>' ?></td>
-					<td class="tc2"><a href="mailto:<?php echo $user_data[$cur_poster['poster_id']]['email'] ?>"><?php echo $user_data[$cur_poster['poster_id']]['email'] ?></a></td>
+					<td class="tc2"><a href="mailto:<?php echo pun_htmlspecialchars($user_data[$cur_poster['poster_id']]['email']) ?>"><?php echo pun_htmlspecialchars($user_data[$cur_poster['poster_id']]['email']) ?></a></td>
 					<td class="tc3"><?php echo $user_title ?></td>
 					<td class="tc4"><?php echo forum_number_format($user_data[$cur_poster['poster_id']]['num_posts']) ?></td>
 					<td class="tc5"><?php echo ($user_data[$cur_poster['poster_id']]['admin_note'] != '') ? pun_htmlspecialchars($user_data[$cur_poster['poster_id']]['admin_note']) : '&#160;' ?></td>
@@ -361,7 +361,7 @@ else if (isset($_POST['move_users']) || isset($_POST['move_users_comply']))
 					<fieldset>
 						<legend><?php echo $lang_admin_users['Move users subhead'] ?></legend>
 						<div class="infldset">
-							<table class="aligntop" cellspacing="0">
+							<table class="aligntop">
 								<tr>
 									<th scope="row"><?php echo $lang_admin_users['New group label'] ?></th>
 									<td>
@@ -643,7 +643,7 @@ else if (isset($_POST['ban_users']) || isset($_POST['ban_users_comply']))
 					<fieldset>
 						<legend><?php echo $lang_admin_users['Message expiry subhead'] ?></legend>
 						<div class="infldset">
-							<table class="aligntop" cellspacing="0">
+							<table class="aligntop">
 								<tr>
 									<th scope="row"><?php echo $lang_admin_users['Ban message label'] ?></th>
 									<td>
@@ -839,7 +839,7 @@ else if (isset($_GET['find_user']))
 	<h2><span><?php echo $lang_admin_users['Results head'] ?></span></h2>
 	<div class="box">
 		<div class="inbox">
-			<table cellspacing="0">
+			<table>
 			<thead>
 				<tr>
 					<th class="tcl" scope="col"><?php echo $lang_admin_users['Results username head'] ?></th>
@@ -871,7 +871,7 @@ else if (isset($_GET['find_user']))
 ?>
 				<tr>
 					<td class="tcl"><?php echo '<a href="profile.php?id='.$user_data['id'].'">'.pun_htmlspecialchars($user_data['username']).'</a>' ?></td>
-					<td class="tc2"><a href="mailto:<?php echo $user_data['email'] ?>"><?php echo $user_data['email'] ?></a></td>
+					<td class="tc2"><a href="mailto:<?php echo pun_htmlspecialchars($user_data['email']) ?>"><?php echo pun_htmlspecialchars($user_data['email']) ?></a></td>
 					<td class="tc3"><?php echo $user_title ?></td>
 					<td class="tc4"><?php echo forum_number_format($user_data['num_posts']) ?></td>
 					<td class="tc5"><?php echo ($user_data['admin_note'] != '') ? pun_htmlspecialchars($user_data['admin_note']) : '&#160;' ?></td>
@@ -935,7 +935,7 @@ else
 						<legend><?php echo $lang_admin_users['User search subhead'] ?></legend>
 						<div class="infldset">
 							<p><?php echo $lang_admin_users['User search info'] ?></p>
-							<table class="aligntop" cellspacing="0">
+							<table class="aligntop">
 								<tr>
 									<th scope="row"><?php echo $lang_admin_users['Username label'] ?></th>
 									<td><input type="text" name="form[username]" size="25" maxlength="25" tabindex="2" /></td>
@@ -1074,7 +1074,7 @@ else
 					<fieldset>
 						<legend><?php echo $lang_admin_users['IP search subhead'] ?></legend>
 						<div class="infldset">
-							<table class="aligntop" cellspacing="0">
+							<table class="aligntop">
 								<tr>
 									<th scope="row"><?php echo $lang_admin_users['IP address label'] ?><div><input type="submit" value="<?php echo $lang_admin_users['Find IP address'] ?>" tabindex="26" /></div></th>
 									<td><input type="text" name="show_users" size="18" maxlength="15" tabindex="24" />

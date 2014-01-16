@@ -62,7 +62,7 @@ if (isset($_POST['mark_as_spam']))
 	require PUN_ROOT.'include/search_idx.php';
 	
 	// include our functions
-	require PUN_ROOT.'include/gamezoo_akismet.php';
+	require_once PUN_ROOT.'include/gamezoo_akismet.php';
 	
 	// determine the email. It's not saved in the post if the user is not a guest.
 	$email = NULL;

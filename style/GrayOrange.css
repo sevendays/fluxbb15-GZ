@@ -214,9 +214,7 @@ html, body, .pun table, .pun div, .pun form, .pun p, .pun h1, .pun h2, .pun h3, 
 
 #brdmain {
 	border-style: solid none;
-	border-width: 2px 0;
-	margin-bottom: 12px;
-	padding: 12px 0;
+	border-width: 1px 0 0 0;
 }
 
 #punindex #brdmain {
@@ -231,9 +229,8 @@ html, body, .pun table, .pun div, .pun form, .pun p, .pun h1, .pun h2, .pun h3, 
 
 #brdstats {
 	border-style: solid none none none;
-	border-width: 2px 0 0 0;
+	border-width: 1px 0 0 0;
 	margin-top: 24px;
-	padding-top: 12px;
 }
 
 #quickpost {
@@ -338,8 +335,6 @@ html, body, .pun table, .pun div, .pun form, .pun p, .pun h1, .pun h2, .pun h3, 
 }
 
 #brdstats #onlinelist {
-	border-top-style: solid;
-	border-top-width: 1px;
 	clear: both;
 }
 
@@ -349,6 +344,8 @@ html, body, .pun table, .pun div, .pun form, .pun p, .pun h1, .pun h2, .pun h3, 
 
 /* Footer
 ----------------------------------------------------------------*/
+
+#brdfooter {display:none;}
 
 .pun #modcontrols {
 	border-style: none none solid none;
@@ -669,7 +666,6 @@ html, body, .pun table, .pun div, .pun form, .pun p, .pun h1, .pun h2, .pun h3, 
 }
 
 .pun .blocktable .tclcon {
-	height: 1%;
 	min-height: 1px;
 	overflow: hidden;
 	padding: 0 11px 0 12px;
@@ -960,7 +956,6 @@ MAIN POSTS
 }
 
 .pun .codebox pre {
-	overflow-y:hidden;
 	overflow: auto;
 	width: 100%;
 	direction: ltr;
@@ -1186,6 +1181,10 @@ MAIN FORMS
 .pun .txtarea textarea, .pun input.longinput {
 	background: #868686;
 	width: 98%;
+}
+
+.pun textarea {
+	resize: vertical;
 }
 
 .pun #quickpost .txtarea {
@@ -1592,7 +1591,7 @@ html, body, .pun {
 
 .pun label, .pun legend, #adminconsole fieldset th {
 	color: #ddc;
-	
+
 }
 
 /*.pun fieldset {
@@ -1681,7 +1680,7 @@ html, body, .pun {
 	border-right-color: #565656;
 	font-family: 'Lucida Grande', Trebuchet MS, Tahoma, Verdana, Arial, Sans-Serif;
 }
-#logo {	
+#logo {
 	margin-right: 10px;
 	float: left;
 	font-family: 'Lucida Grande', Trebuchet MS, Tahoma, Verdana, Arial, Sans-Serif;
@@ -1701,7 +1700,7 @@ html, body, .pun {
 	color: #8B4222;
 	background: #565656;
 }
-#navbox ul { 
+#navbox ul {
 	padding: 0;
 	margin: 0;
 	list-style: none;
@@ -1718,16 +1717,16 @@ html, body, .pun {
 	border-color: #2A2A2A;
 	color: #D4D4D4;
 }
-#navbox a:hover, #navbox a:active, #navbox a:focus { 
+#navbox a:hover, #navbox a:active, #navbox a:focus {
 	text-decoration: none;
 	background: #6F6F6F;
 	border-color: #2A2A2A;
 	color: #FFEE40
 }
-#slogan { 
+#slogan {
 	font-family: 'Lucida Grande', Trebuchet MS, Tahoma, Verdana, Arial, Sans-Serif;
 	font-size: 10pt;
-	padding: 3px 3px 3px 3px; 
+	padding: 3px 3px 3px 3px;
 	margin-top: -8px;
 	color: #FFFFFF
 }

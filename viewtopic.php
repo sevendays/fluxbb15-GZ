@@ -92,7 +92,8 @@ $cur_topic = $db->fetch_assoc($result);
 // Sort out who the moderators are and if we are currently a moderator (or an admin)
 $mods_array = ($cur_topic['moderators'] != '') ? unserialize($cur_topic['moderators']) : array();
 $is_admmod = ($pun_user['g_id'] == PUN_ADMIN || ($pun_user['g_moderator'] == '1' && array_key_exists($pun_user['username'], $mods_array))) ? true : false;
-$admin_ids = explode(',', $pun_config['o_admin_ids']);
+if ($is_admmod)
+	$admin_ids = get_admin_ids();
 
 // Can we or can we not post replies?
 if ($cur_topic['closed'] == '0')
@@ -262,7 +263,7 @@ while ($cur_post = $db->fetch_assoc($result))
 
 			// Now let's deal with the contact links (Email and URL)
 			if ((($cur_post['email_setting'] == '0' && !$pun_user['is_guest']) || $pun_user['is_admmod']) && $pun_user['g_send_email'] == '1')
-				$user_contacts[] = '<span class="email"><a href="mailto:'.$cur_post['email'].'">'.$lang_common['Email'].'</a></span>';
+				$user_contacts[] = '<span class="email"><a href="mailto:'.pun_htmlspecialchars($cur_post['email']).'">'.$lang_common['Email'].'</a></span>';
 			else if ($cur_post['email_setting'] == '1' && !$pun_user['is_guest'] && $pun_user['g_send_email'] == '1')
 				$user_contacts[] = '<span class="email"><a href="misc.php?email='.$cur_post['poster_id'].'">'.$lang_common['Email'].'</a></span>';
 
@@ -293,7 +294,7 @@ while ($cur_post = $db->fetch_assoc($result))
 			$user_info[] = '<dd><span><a href="moderate.php?get_host='.$cur_post['id'].'" title="'.pun_htmlspecialchars($cur_post['poster_ip']).'">'.$lang_topic['IP address logged'].'</a></span></dd>';
 
 		if ($pun_config['o_show_user_info'] == '1' && $cur_post['poster_email'] != '' && !$pun_user['is_guest'] && $pun_user['g_send_email'] == '1')
-			$user_contacts[] = '<span class="email"><a href="mailto:'.$cur_post['poster_email'].'">'.$lang_common['Email'].'</a></span>';
+			$user_contacts[] = '<span class="email"><a href="mailto:'.pun_htmlspecialchars($cur_post['poster_email']).'">'.$lang_common['Email'].'</a></span>';
 	}
 
 	// Generation post action array (quote, edit, delete etc.)
@@ -330,7 +331,7 @@ while ($cur_post = $db->fetch_assoc($result))
 	/******* Post: pre-view hooks BEGIN *******/
 	
 	// GameZoo Akismet antispam post filter
-	require PUN_ROOT.'include/gamezoo_akismet.php';
+	require_once PUN_ROOT.'include/gamezoo_akismet.php';
 	// insert "mark as spam" in $post_actions[] for trusted users
 	gz_ak_viewtopic_preview_hook($post_actions, $cur_post['g_id'], $cur_post['id']);
 	
@@ -416,12 +417,12 @@ $cur_index = 1;
 
 ?>
 <div id="quickpost" class="blockform">
-	<h2><span><?php echo $lang_topic['Quick post'] ?></span></h2>
+	<!--<h2><span><?php echo $lang_topic['Quick post'] ?></span></h2>-->
 	<div class="box">
 		<form id="quickpostform" method="post" action="post.php?tid=<?php echo $id ?>" onsubmit="this.submit.disabled=true;if(process_form(this)){return true;}else{this.submit.disabled=false;return false;}">
 			<div class="inform">
 				<fieldset>
-					<legend><?php echo $lang_common['Write message legend'] ?></legend>
+					<legend><?php echo $lang_topic['Quick post'] ?></legend>
 					<div class="infldset txtarea">
 						<input type="hidden" name="form_sent" value="1" />
 <?php if ($pun_config['o_topic_subscriptions'] == '1' && ($pun_user['auto_notify'] == '1' || $cur_topic['is_subscribed'])): ?>						<input type="hidden" name="subscribe" value="1" />

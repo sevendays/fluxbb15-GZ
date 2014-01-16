@@ -44,7 +44,7 @@ if (($pun_user['g_edit_posts'] == '0' ||
 	!$is_admmod)
 	message($lang_common['No permission'], false, '403 Forbidden');
 
-if ($is_admmod && $pun_user['g_id'] != PUN_ADMIN && in_array($cur_post['poster_id'], explode(',', $pun_config['o_admin_ids'])))
+if ($is_admmod && $pun_user['g_id'] != PUN_ADMIN && in_array($cur_post['poster_id'], get_admin_ids()))
 	message($lang_common['No permission'], false, '403 Forbidden');
 
 // Load the post.php language file
@@ -56,8 +56,8 @@ $errors = array();
 
 if (isset($_POST['form_sent']))
 {
-	if ($is_admmod)
-		confirm_referrer('edit.php');
+	// Make sure they got here from the site
+	confirm_referrer('edit.php');
 
 	// If it's a topic it must contain a subject
 	if ($can_edit_subject)
@@ -215,12 +215,12 @@ else if (isset($_POST['preview']))
 
 ?>
 <div id="editform" class="blockform">
-	<h2><span><?php echo $lang_post['Edit post'] ?></span></h2>
+	<!--<h2><span><?php echo $lang_post['Edit post'] ?></span></h2>-->
 	<div class="box">
 		<form id="edit" method="post" action="edit.php?id=<?php echo $id ?>&amp;action=edit" onsubmit="return process_form(this)">
 			<div class="inform">
 				<fieldset>
-					<legend><?php echo $lang_post['Edit post legend'] ?></legend>
+					<legend><?php echo $lang_post['Edit post'] ?></legend>
 					<input type="hidden" name="form_sent" value="1" />
 					<div class="infldset txtarea">
 <?php if ($can_edit_subject): ?>						<label class="required"><strong><?php echo $lang_common['Subject'] ?> <span><?php echo $lang_common['Required'] ?></span></strong><br />

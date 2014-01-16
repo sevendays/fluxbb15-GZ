@@ -92,7 +92,12 @@ if (!defined('PUN_ALLOW_INDEX'))
 
 ?>
 <title><?php echo generate_page_title($page_title, $p) ?></title>
+
 <link rel="stylesheet" type="text/css" href="style/<?php echo $pun_user['style'].'.css' ?>" />
+
+<!-- PostImage mod -->
+<script type="text/javascript" src="http://mod.postimage.org/fluxbb-english.js" charset="utf-8"></script>
+
 <?php
 
 if (defined('PUN_ADMIN_CONSOLE'))

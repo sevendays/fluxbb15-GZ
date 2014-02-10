@@ -45,6 +45,8 @@ function gz_ak_first_time()
 	{
 		case 'mysql':
 		case 'mysqli':
+		case 'mysql_innodb':
+		case 'mysqli_innodb':
 			$result = $db->query('SHOW TABLES') or error('Unable to fetch tables', __FILE__, __LINE__, $db->error());
 			break;
 		case 'pgsql': // untested
@@ -52,6 +54,9 @@ function gz_ak_first_time()
 			break;
 		case 'sqlite': // untested
 			$result = $db->query("SELECT name FROM sqlite_master WHERE type='table';") or error('Unable to fetch tables', __FILE__, __LINE__, $db->error());
+			break;
+		default: // hummm just use mysql?
+			$result = $db->query('SHOW TABLES') or error('Unable to fetch tables', __FILE__, __LINE__, $db->error());
 			break;
 	}
 	$tables = array();

@@ -28,7 +28,7 @@ function gz_ak_post_presave_hook($username, $email, $topic_id, $forum_id, $subje
 	
 	// OK: we may now fire up Akismet.
 	if(!class_exists('Akismet'))
-		require PUN_ROOT.'include/Akismet.class.php';
+		require_once PUN_ROOT.'include/Akismet.class.php';
 	
 	$ak = new Akismet(get_base_url(true), $gz_ak_cfg['api_key']);
 	$ak->setCommentAuthor($username);
@@ -158,7 +158,7 @@ function gz_ak_hams($ids, &$errors)
 	$db->query('DELETE FROM '.$db->prefix.'bans WHERE username IN(\''.implode('\',\'', $usernames).'\')') or error('Unable to delete ban', __FILE__, __LINE__, $db->error());
 	// Regenerate the bans cache
 	if (!defined('FORUM_CACHE_FUNCTIONS_LOADED'))
-		require PUN_ROOT.'include/cache.php';
+		require_once PUN_ROOT.'include/cache.php';
 	generate_bans_cache();
 	
 	// restore posts
@@ -216,7 +216,7 @@ function gz_ak_hams($ids, &$errors)
 		$stick_topic = isset($_POST['stick_topic']) && $is_admmod ? '1' : '0';
 		
 		// update search idx
-		require PUN_ROOT.'include/search_idx.php';
+		require_once PUN_ROOT.'include/search_idx.php';
 		
 		/*** BEGIN C&P FROM post.php, with some modifications in queries and guest detection ***/
 		// If it's a reply
@@ -465,7 +465,7 @@ function gz_ak_hams($ids, &$errors)
 	
 	// signal hams to akismet
 	if(!class_exists('Akismet'))
-		require PUN_ROOT.'include/Akismet.class.php';
+		require_once PUN_ROOT.'include/Akismet.class.php';
 	$ak = new Akismet(get_base_url(true), $gz_ak_cfg['api_key']);
 	
 	foreach($hams as $ham)

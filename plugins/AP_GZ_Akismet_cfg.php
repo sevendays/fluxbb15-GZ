@@ -8,7 +8,7 @@ if (!defined('PUN'))
 //	define('PUN_DEBUG', 1);
 	
 // Load the akismet_gamezoo.php language file
-require PUN_ROOT.'lang/'.$admin_language.'/gamezoo_akismet_lang.php';
+require_once PUN_ROOT.'lang/'.$admin_language.'/gamezoo_akismet_lang.php';
 
 // Tell admin_loader.php that this is indeed a plugin and that it is loaded
 define('PUN_PLUGIN_LOADED', 1);
@@ -228,7 +228,7 @@ function gz_ak_update()
 	
 	// check that the api key is correct - just ask akismet!
 	if(!class_exists('Akismet'))
-		require PUN_ROOT.'include/Akismet.class.php';
+		require_once PUN_ROOT.'include/Akismet.class.php';
 	$akismet = new Akismet(get_base_url(true), $api_key);
 	if($akismet->isKeyValid()) $gz_ak_cfg['api_key'] = $api_key;
 	else $errors['api_key'] = $gz_ak_lang['invalid key'];
@@ -313,7 +313,7 @@ function gz_ak_update()
 		
 		// Regenerate the config cache
 		if (!defined('FORUM_CACHE_FUNCTIONS_LOADED'))
-			require PUN_ROOT.'include/cache.php';
+			require_once PUN_ROOT.'include/cache.php';
 
 		generate_config_cache();
 		

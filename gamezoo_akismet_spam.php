@@ -7,7 +7,7 @@
  */
 
 define('PUN_ROOT', dirname(__FILE__).'/');
-require PUN_ROOT.'include/common.php';
+require_once PUN_ROOT.'include/common.php';
 
 if ($pun_user['g_read_board'] == '0')
 	message($lang_common['No view'], false, '403 Forbidden');
@@ -51,7 +51,7 @@ if (!$is_monitored)
 $is_topic_post = ($id == $cur_post['first_post_id']) ? true : false;
 
 // Load the gamezoo akismet language file
-require PUN_ROOT.'lang/'.$pun_user['language'].'/gamezoo_akismet_lang.php';
+require_once PUN_ROOT.'lang/'.$pun_user['language'].'/gamezoo_akismet_lang.php';
 
 
 // has the confirmation been sent or not?
@@ -59,7 +59,7 @@ if (isset($_POST['mark_as_spam']))
 {
 	confirm_referrer('gamezoo_akismet_spam.php');
 
-	require PUN_ROOT.'include/search_idx.php';
+	require_once PUN_ROOT.'include/search_idx.php';
 	
 	// include our functions
 	require_once PUN_ROOT.'include/gamezoo_akismet.php';
@@ -87,7 +87,7 @@ if (isset($_POST['mark_as_spam']))
 	
 	// signal spam to akismet
 	if(!class_exists('Akismet'))
-		require PUN_ROOT.'include/Akismet.class.php';
+		require_once PUN_ROOT.'include/Akismet.class.php';
 	$ak = new Akismet(get_base_url(true), $gz_ak_cfg['api_key']);
 	$ak->setCommentAuthor($cur_post['poster']);
 	$ak->setCommentAuthorEmail($email);
@@ -129,9 +129,9 @@ if (isset($_POST['mark_as_spam']))
 // print out the form page asking for confirmation
 $page_title = array(pun_htmlspecialchars($pun_config['o_board_title']), $gz_ak_lang['mark as spam']);
 define ('PUN_ACTIVE_PAGE', 'index');
-require PUN_ROOT.'header.php';
+require_once PUN_ROOT.'header.php';
 
-require PUN_ROOT.'include/parser.php';
+require_once PUN_ROOT.'include/parser.php';
 $cur_post['message'] = parse_message($cur_post['message'], $cur_post['hide_smilies']);
 
 ?>
@@ -185,4 +185,4 @@ $cur_post['message'] = parse_message($cur_post['message'], $cur_post['hide_smili
 </div>
 <?php
 
-require PUN_ROOT.'footer.php';
+require_once PUN_ROOT.'footer.php';

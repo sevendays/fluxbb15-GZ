@@ -8,7 +8,7 @@ if (!defined('PUN'))
 //	define('PUN_DEBUG', 1);
 	
 // Load the akismet_gamezoo.php language file
-require PUN_ROOT.'lang/'.$admin_language.'/gamezoo_akismet_lang.php';
+require_once PUN_ROOT.'lang/'.$admin_language.'/gamezoo_akismet_lang.php';
 
 // Tell admin_loader.php that this is indeed a plugin and that it is loaded
 define('PUN_PLUGIN_LOADED', 1);
@@ -57,7 +57,7 @@ function gz_ak_queue_show($errors = NULL)
 	$gz_ak_cfg = json_decode($pun_config['o_gz_akismet'], true);
 	
 	// delete old spam
-	require PUN_ROOT.'include/gamezoo_akismet.php';
+	require_once PUN_ROOT.'include/gamezoo_akismet.php';
 	$old_spam_deleted = gz_ak_autodelete_spams();
 	
 	?>
@@ -249,7 +249,7 @@ function gz_ak_queue_spamactions()
 	$realhams = array_diff($hams, $common);
 	
 	if(!empty($realspams) || !empty($realhams))
-		require PUN_ROOT.'include/gamezoo_akismet.php';
+		require_once PUN_ROOT.'include/gamezoo_akismet.php';
 	else
 	{
 		$errors[] = $gz_ak_lang['spam ham overlap'];

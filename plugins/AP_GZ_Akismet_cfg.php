@@ -76,6 +76,8 @@ function gz_ak_install()
 	{
 		case 'mysql':
 		case 'mysqli':
+		case 'mysql_innodb':
+		case 'mysqli_innodb':
 			$sql = "CREATE TABLE ".$db->prefix."gz_akismet_queue (
 					id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 					poster VARCHAR(200) NOT NULL DEFAULT '',
@@ -133,6 +135,9 @@ function gz_ak_install()
 					user_agent TEXT,
 					PRIMARY KEY (id)
 					)";
+			break;
+		default:
+			error('\''.$db_type.'\' is not a valid database type. Please check settings in config.php.', __FILE__, __LINE__);
 			break;
 	}
 	

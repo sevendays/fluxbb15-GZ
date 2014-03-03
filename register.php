@@ -78,9 +78,9 @@ if (isset($_POST['form_sent']))
 	// "req_user" should always be empty.
 	// human spammers can still register --> akismet
 	
-	if(isset($_POST['reg_user']))
+	if(isset($_POST['req_user']))
 	{
-		if(!empty($_POST['reg_user']))
+		if(!empty($_POST['req_user']))
 			// TODO what should be the best strategy?
 			exit();
 	}
